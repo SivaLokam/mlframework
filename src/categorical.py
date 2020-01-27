@@ -50,6 +50,11 @@ class CategoricalFeatures:
             self.binary_encoders[c] = lbl          
         return self.output_df
 
+    def _one_hot(self):        
+        ohe = preprocessing.OneHotEncoder()
+        ohe.fit(self.df[self.cat_feats].values)
+        return ohe.transform(self.output_df[cat_feats].values)
+
     def transform(self, dataframe):
         if self.handle_na:
             for c in self.cat_feats:
@@ -76,7 +81,9 @@ class CategoricalFeatures:
         if self.enc_type=='label':
             return self._label_encoding()
         elif self.enc_type=='binary':
-            return self._label_binarization()           
+            return self._label_binarization()
+        elif self.enc_type=='ohe':
+            return self._one_hot()           
         else:
             raise Exception("Encoding type not understood")
         
@@ -89,10 +96,11 @@ if __name__=='__main__':
     print(df.head())
     print(df_test.head())
 
-    train_idx = df["id"].values
+    # train_idx = df["id"].values
+    # df_test["target"] = -1
+    # test_idx  = df_test["id"].values
 
-    df_test["target"] = -1
-    test_idx  = df_test["id"].values
+    train_len = df.shape[0]
     
 
     full_data = pd.concat([df,df_test])
@@ -100,14 +108,18 @@ if __name__=='__main__':
     print(cols)
     cat_feats = CategoricalFeatures(full_data,
                                     categorical_features=cols,
-                                    encoding_type='label',
+                                    encoding_type='ohe',
                                     handle_na=True)
     
     full_data_transformed = cat_feats.fit_transform()
+    train_transformed = full_data_transformed[:train_len,:]
+    test_transformed = full_data_transformed[train_len:,:]
 
-    train_transformed = full_data_transformed[full_data_transformed["id"].isin(train_idx)].reset_index(drop=True)
-    test_transformed = full_data_transformed[full_data_transformed["id"].isin(test_idx)].reset_index(drop=True)
-    # train_transfomred = cat_feats.fit_transform()
+    # train_transformed = full_data_transformed[full_data_transformed["id"].isin(train_idx)].reset_index(drop=True)
+    # test_transformed = full_data_transformed[full_data_transformed["id"].isin(test_idx)].reset_index(drop=True)
+    # # train_transfomred = cat_feats.fit_transform()
     # test_transformed = cat_feats.transform(df_test)
     print(train_transformed.head())
-    print(test_transformed.head())
+    print(train_transformed.shape)
+    print(test_transformed.shape)
+   
