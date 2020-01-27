@@ -50,10 +50,12 @@ class CategoricalFeatures:
             self.binary_encoders[c] = lbl          
         return self.output_df
 
-    def _one_hot(self):        
-        ohe = preprocessing.OneHotEncoder()
+    def _one_hot(self):                
+        ohe = preprocessing.OneHotEncoder()      
         ohe.fit(self.df[self.cat_feats].values)
-        return ohe.transform(self.output_df[cat_feats].values)
+        return ohe.transform(self.output_df[self.cat_feats].values)
+        
+
 
     def transform(self, dataframe):
         if self.handle_na:
@@ -91,10 +93,11 @@ class CategoricalFeatures:
 
 if __name__=='__main__':
     import pandas as pd
+    from sklearn import linear_model
     df = pd.read_csv('../input/train_cat.csv')#.head(500)
     df_test = pd.read_csv('../input/test_cat.csv')#.head(500)
-    print(df.head())
-    print(df_test.head())
+    # print(df.head())
+    # print(df_test.head())
 
     # train_idx = df["id"].values
     # df_test["target"] = -1
@@ -105,21 +108,39 @@ if __name__=='__main__':
 
     full_data = pd.concat([df,df_test])
     cols = [c for c in full_data.columns if c not in ["id", "target"]]
-    print(cols)
+    # print(cols)
     cat_feats = CategoricalFeatures(full_data,
                                     categorical_features=cols,
                                     encoding_type='ohe',
                                     handle_na=True)
     
     full_data_transformed = cat_feats.fit_transform()
-    train_transformed = full_data_transformed[:train_len,:]
-    test_transformed = full_data_transformed[train_len:,:]
+
+    X      = full_data_transformed[:train_len,:]
+    X_test = full_data_transformed[train_len:,:]
+    sample = pd.read_csv('../input/sample_submission.csv')
+
+    print(sample.head())
+
+    # print(train_df.shape)
+    # print(test_df.shape)
+
+    clf = linear_model.LogisticRegression()
+    clf.fit(X,df.target.values)
+    preds = clf.predict_proba(X_test)[:, 1]
+
+    sample.loc[:,"target"] = preds
+    sample.to_csv("submission.csv",index=False)
+
+
+    # train_transformed = full_data_transformed[:train_len,:]
+    # test_transformed = full_data_transformed[train_len:,:]
 
     # train_transformed = full_data_transformed[full_data_transformed["id"].isin(train_idx)].reset_index(drop=True)
     # test_transformed = full_data_transformed[full_data_transformed["id"].isin(test_idx)].reset_index(drop=True)
     # # train_transfomred = cat_feats.fit_transform()
     # test_transformed = cat_feats.transform(df_test)
-    print(train_transformed.head())
-    print(train_transformed.shape)
-    print(test_transformed.shape)
+    # print(train_transformed.head())
+    # print(train_transformed.shape)
+    # print(test_transformed.shape)
    
