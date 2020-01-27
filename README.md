@@ -1,2 +1,2 @@
 # mlframework
-my mlframework trying to build a general frame work for all sorts of problems
+This is a practice exercise to build a mlframework reference from youtube video by Abhishek Thakur
